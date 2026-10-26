@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Caelus · Sky Dome Plotter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <figure class="plate">
+    <img src="flammarion.jpg" alt="Colored Flammarion engraving: a traveler kneels at the edge of the world and pushes his head through the starry dome of the sky, beneath the Sun and Moon" width="720" height="605">
+    <figcaption>After the Flammarion engraving, 1888</figcaption>
+  </figure>
+  <div>
+    <p class="eyebrow">A sky-dome plotter for celestial navigation</p>
+    <h1>Caelus</h1>
+    <p class="lede">Log where a body rises, how high it climbs at meridian passage, and where it sets. Each day becomes a path on the dome of the sky above your own horizon.</p>
+    <div class="locline" id="locLine"></div>
+  </div>
+</header>
+<nav class="pagetabs" role="tablist" aria-label="Sections">
+  <button type="button" role="tab" id="tabDome" aria-selected="true">Sky dome</button>
+  <button type="button" role="tab" id="tabPredict" aria-selected="false">Make prediction</button>
+</nav>
+<div id="pageDome">
+<div class="layout">
+  <section class="card dome-card" aria-label="Sky dome">
+    <div class="dome-box"><div class="svg-wrap" id="svgWrap"><svg id="dome" viewBox="0 0 640 400" role="img" aria-label="Sky dome showing logged rise, culmination and set points"></svg></div><div class="zoombar"><span id="zLbl"></span><button type="button" id="zIn" aria-label="Zoom in">+</button><button type="button" id="zOut" aria-label="Zoom out">−</button><button type="button" id="zFit">Fit</button></div></div>
+    <div class="legend" id="legend"></div>
+    <div class="declutter" id="declutter">
+      <span class="dlab">Bodies</span>
+      <div class="seg" role="group" aria-label="Turn the Sun or Moon paths on or off">
+        <button type="button" id="togSun" aria-pressed="true"><i class="dot" style="background:#d9940a"></i>Sun</button>
+        <button type="button" id="togMoon" aria-pressed="true"><i class="dot" style="background:#3c8fc0"></i>Moon</button>
+      </div>
+      <label class="inline">Thin out <select id="thin" style="width:auto"><option value="1">Every entry</option><option value="2">Every 2nd</option><option value="3">Every 3rd</option><option value="5">Every 5th</option><option value="7">Every 7th</option><option value="10">Every 10th</option></select></label>
+      <label class="inline">From <input type="date" id="rngFrom" style="width:auto"></label>
+      <label class="inline">To <input type="date" id="rngTo" style="width:auto"></label>
+      <button type="button" class="btn ghost small" id="rngClear">All dates</button>
+      <label class="inline">Labels <select id="labelMode" style="width:auto"><option value="auto">Auto (fewer when crowded)</option><option value="all">All</option><option value="sel">Selected path only</option></select></label>
+      <span id="countInfo" aria-live="polite"></span>
+    </div>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Facing">
+        <button data-phi="270">Face W</button><button data-phi="0">Face N</button><button data-phi="90">Face E</button><button data-phi="180">Face S</button>
+      </div>
+      <label class="inline">Rotate <input type="range" id="phi" min="0" max="359"></label>
+      <label class="inline">Tilt <input type="range" id="tilt" min="3" max="75"></label>
+      <label class="inline">Path
+        <select id="style" style="width:auto"><option value="arc">True diurnal arc</option><option value="lines">Straight lines (journal style)</option></select>
+      </label>
+      <label class="inline">Times <select id="times" style="width:auto"><option value="0">Off</option><option value="30">Every 30 min</option><option value="60">Every hour</option><option value="120">Every 2 hours</option></select></label>
+      <label class="inline">Show <select id="filter" style="width:auto"></select></label>
+      <label class="inline"><input type="checkbox" id="labels"> Labels</label>
+      <label class="inline"><input type="checkbox" id="refs"> Equator and solstice paths</label>
+      <button type="button" class="btn ghost small" id="screw" aria-pressed="false">Corkscrew: connect paths below the horizon</button>
+      <button type="button" class="btn ghost small" id="clockToggle" aria-pressed="false">Sky clock</button>
+      <button type="button" class="btn ghost small" id="saveImg">Save dome image</button>
+    </div>
+    <div id="clockPanel" class="clockpanel" hidden>
+      <button type="button" class="btn small" id="clockPlay">Play</button>
+      <label class="inline">Date <input type="date" id="clockDate" style="width:auto"></label>
+      <label class="inline">Time <input type="range" id="clockTime" min="0" max="1439" step="1" style="width:190px"> <span id="clockTimeLbl" class="v"></span></label>
+      <label class="inline">Play <select id="clockMode" style="width:auto"><option value="day">through the day</option><option value="year">day by day, same clock time</option></select></label>
+      <label class="inline">Speed <select id="clockSpeed" style="width:auto"><option value="0.4">slow</option><option value="1" selected>normal</option><option value="3">fast</option></select></label>
+      <p class="hint" id="clockRead" style="color:var(--ink);flex-basis:100%;margin:0"></p>
+    </div>
+    <p class="hint" id="selInfo" style="color:var(--ink);font-size:.95rem"></p>
+    <p class="hint">Drag sideways on the dome to turn it. Where labels pile up, zoom in with the + button, a pinch, Ctrl+scroll or a double-click; the labels spread apart, and dragging moves you around. Fit returns to the whole dome. Tap a path or a log row to select that day: the other paths turn gray and the selected one shows clock times. Tap empty sky to clear. Corkscrew joins each logged day to the next in one continuous loop, including the part spent below the horizon, so you can see the drift in declination. The Sun really makes one loop per day; logging daily shows the true spacing.</p>
+  </section>
+
+  <div class="inputs">
+    <section class="card">
+      <h2>Your location</h2>
+      <div class="seg" role="group" aria-label="How to set your location" style="margin-bottom:12px"><button type="button" data-mode="city">Search by city</button><button type="button" data-mode="coords">Enter coordinates</button></div>
+      <div id="cityPane">
+        <label>City <input id="citySearch" placeholder="Cambridge, Medellín, Tokyo…" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="cityResults"></label>
+        <ul id="cityResults" class="results" role="listbox" hidden></ul>
+        <p class="note" id="cityPicked"></p>
+        <p class="note">Type a city name. Add a state or country after a comma to narrow it, such as “Cambridge, MA” or “Cambridge, United Kingdom”.</p>
+      </div>
+      <div id="coordPane" hidden>
+      <label>Place name <input id="locName"></label>
+      <div class="grid3" style="margin-top:10px">
+        <label>Latitude deg <input id="latD" inputmode="numeric"></label>
+        <label>min <input id="latM" inputmode="decimal"></label>
+        <label>&nbsp;<select id="latH"><option>N</option><option>S</option></select></label>
+      </div>
+      <div class="grid3" style="margin-top:10px">
+        <label>Longitude deg <input id="lonD" inputmode="numeric"></label>
+        <label>min <input id="lonM" inputmode="decimal"></label>
+        <label>&nbsp;<select id="lonH"><option>W</option><option>E</option></select></label>
+      </div>
+      </div>
+      <label style="margin-top:10px">Time zone (for computed times; start typing a city, such as Bogota or London)
+        <input id="tz" list="tzList" autocomplete="off">
+        <datalist id="tzList"><option value="America/New_York"><option value="America/Chicago"><option value="America/Denver"><option value="America/Los_Angeles"><option value="America/Bogota"><option value="UTC"></datalist>
+      </label>
+      <div class="row"><button class="btn ghost small" id="presetCam">Use Cambridge, MA</button></div>
+      <p class="err" id="locErr"></p>
+    </section>
+
+    <section class="card">
+      <h2 id="formTitle">Add an observation</h2>
+      <form id="obsForm" autocomplete="off">
+        <span class="flabel">Body</span>
+        <div class="bodyrow">
+          <div class="seg" role="group" aria-label="Body"><button type="button" data-body="Sun"><i class="dot" style="background:#d9940a"></i>Sun</button><button type="button" data-body="Moon"><i class="dot" style="background:#3c8fc0"></i>Moon</button><button type="button" data-body="">Other</button></div>
+          <input id="fBody" list="bodyList" value="Sun" aria-label="Body name">
+        </div>
+        <div class="grid2" style="margin-top:10px">
+          <label>Local date <input id="fDate" type="date"></label>
+        </div>
+        <datalist id="bodyList"><option value="Sun"><option value="Moon"><option value="Venus"><option value="Mars"><option value="Jupiter"><option value="Saturn"></datalist>
+        <fieldset><legend>Rise</legend>
+          <div class="grid2"><label>Azimuth (true) <input id="fRiseAz" placeholder="078.5" inputmode="decimal"></label><label>Time <input id="fRiseT" type="time" step="1"></label></div>
+        </fieldset>
+        <fieldset><legend>Highest point (meridian passage)</legend>
+          <div class="grid3">
+            <label>Altitude <input id="fAlt" placeholder="38 12.4" inputmode="decimal"></label>
+            <label>Bearing <select id="fCulm"><option value="S">South (180°)</option><option value="N">North (000°)</option></select></label>
+            <label>Time <input id="fLanT" type="time" step="1"></label>
+          </div>
+        </fieldset>
+        <fieldset><legend>Set</legend>
+          <div class="grid2"><label>Azimuth (true) <input id="fSetAz" placeholder="281.5" inputmode="decimal"></label><label>Time <input id="fSetT" type="time" step="1"></label></div>
+        </fieldset>
+        <div class="grid2" style="margin-top:10px">
+          <label>Source <select id="fSrc"><option value="observed">Observed</option><option value="computed">Computed / looked up</option></select></label>
+          <label>Notes <input id="fNotes" placeholder="Instrument, conditions, horizon"></label>
+        </div>
+        <p class="note">Angles take decimal degrees (38.21) or degrees and minutes (38 12.4). Azimuth is measured clockwise from true north. Any field except body and date can be left blank.</p>
+        <p class="err" id="formErr"></p>
+        <div class="row"><button class="btn" type="submit" id="saveBtn">Add to log</button><button class="btn ghost" type="button" id="cancelEdit" hidden>Cancel edit</button></div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Load data</h2>
+      <div class="tabs" role="tablist">
+        <button role="tab" data-tab="sun" aria-selected="true">Sun &amp; Moon tables</button>
+        <button role="tab" data-tab="star" aria-selected="false">Star catalog</button>
+        <button role="tab" data-tab="dec" aria-selected="false">From declination</button>
+        <button role="tab" data-tab="sheet" aria-selected="false">Excel or Google Sheets</button>
+        <button role="tab" data-tab="csv" aria-selected="false">Paste CSV</button>
+      </div>
+      <div class="panel" data-panel="sun">
+        <label style="margin-bottom:10px">Body <select id="sBody"><option value="sun">Sun</option><option value="moon">Moon</option><option value="both">Sun and Moon</option></select></label>
+        <div class="grid3">
+          <label>From <input type="date" id="sFrom"></label>
+          <label>To <input type="date" id="sTo"></label>
+          <label>Every (days) <input type="number" id="sStep" min="1" max="60" value="7"></label>
+        </div>
+        <div class="row"><button class="btn" id="genSun">Add data</button></div>
+        <p class="note">Computed for your location from Meeus, <cite>Astronomical Algorithms</cite> (1998). Sources, conventions and accuracy are listed under Data sources at the end of the page. Use these numbers to check your sights, not to replace them.</p>
+      </div>
+      <div class="panel" data-panel="star" hidden>
+        <div class="grid2"><label>Star <select id="starSel"></select></label><label>Date to log <input type="date" id="starDate"></label></div>
+        <div class="row"><button class="btn" id="addStar">Add star</button></div>
+        <p class="note">A star’s rise azimuth and highest altitude depend only on its declination and your latitude, so they repeat every night. Declinations are approximate for 2026; check them against your Nautical Almanac.</p>
+      </div>
+      <div class="panel" data-panel="dec" hidden>
+        <div class="grid3">
+          <label>Body <input id="dBody" list="bodyList" placeholder="Venus"></label>
+          <label>Declination <input id="dDec" placeholder="12 34.5" inputmode="decimal"></label>
+          <label>&nbsp;<select id="dHem"><option>N</option><option>S</option></select></label>
+        </div>
+        <div class="grid2" style="margin-top:10px"><label>Date to log <input type="date" id="dDate"></label></div>
+        <div class="row"><button class="btn" id="addDec">Add computed path</button></div>
+        <p class="note">For the Moon or a planet, take the declination from the daily pages of your Nautical Almanac for the date. Results use standard refraction (−0°34′) at the horizon.</p>
+      </div>
+      <div class="panel" data-panel="csv" hidden>
+        <textarea id="csvIn" placeholder="body,date,rise_time,rise_az,lan_time,max_alt,culm,set_time,set_az,source,notes&#10;Sun,2026-09-01,06:13:00,78.0,12:56:00,55.9,S,19:37:00,282.0,observed,Weld Boathouse"></textarea>
+        <div class="row"><button class="btn" id="importCsv">Import rows</button><label class="inline" style="color:var(--ink)">or file <input type="file" id="csvFile" accept=".csv,text/csv,text/plain" style="width:auto;background:none;border:0"></label></div>
+        <p class="note">Columns: body, date (YYYY-MM-DD), rise_time, rise_az, lan_time, max_alt, culm (S or N), set_time, set_az, source (observed or computed), notes. A header row is optional and blank cells are fine.</p>
+        <p class="err" id="csvErr"></p>
+      </div>
+      <div class="panel" data-panel="sheet" hidden>
+        <label>Excel, Google Sheets or CSV file <input type="file" id="shFile" accept=".xlsx,.xls,.xlsm,.ods,.csv,.tsv,.txt" style="background:none;border:0;padding-left:0"></label>
+        <label style="margin-top:8px">or paste cells copied from Google Sheets or Excel <textarea id="shPaste" placeholder="Select the cells (with the header row) in Google Sheets or Excel, copy, and paste here"></textarea></label>
+        <div class="row"><button class="btn ghost" type="button" id="shRead">Read pasted cells</button></div>
+        <div id="shMap"></div>
+        <p class="note">For a Google Sheet, copy the cells and paste them above, or choose File → Download → Microsoft Excel (.xlsx) and pick that file. Your columns can have any names and any order; Caelus guesses which is which, and you can correct it before importing. Files are read in your browser and never uploaded.</p>
+      </div>
+    </section>
+
+    <section class="card" id="lanCard">
+      <h2>LAN from equal altitudes</h2>
+      <p class="note" style="margin-top:0">Measure the Sun at the same altitude once in the morning and once in the afternoon. Local apparent noon falls halfway between the two times, and the Sun’s GHA at that moment gives your longitude, as on the noon curve form.</p>
+      <div class="grid2" style="margin-top:10px"><label>Local date <input type="date" id="eDate"></label><label>Altitude of both sights (optional) <input id="eAlt" placeholder="35 20.0" inputmode="decimal"></label></div>
+      <div class="grid2" style="margin-top:10px"><label>Morning time <input type="time" step="1" id="eAM"></label><label>Afternoon time <input type="time" step="1" id="ePM"></label></div>
+      <div class="grid2" style="margin-top:10px"><label>Watch error, seconds (+ if slow) <input id="eWE" value="0" inputmode="numeric"></label><label>Highest altitude Ho (optional) <input id="eHo" placeholder="47 44.0" inputmode="decimal"></label></div>
+      <div class="row"><button class="btn" type="button" id="eCalc">Find LAN</button><button class="btn ghost" type="button" id="eAdd" disabled>Add to log</button></div>
+      <div id="eOut"></div>
+      <p class="note">Times are zone time for your set location. Because the Sun’s declination changes slightly between the two sights, true noon can differ from the midpoint by a few seconds, more near the equinoxes. Give Ho (corrected for index error, height of eye and refraction) to get latitude as well.</p>
+    </section>
+  </div>
+
+  <section class="card log-card">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap">
+      <h2>Observation log</h2>
+      <div class="row" style="margin:0;align-items:center"><span class="muted" id="plotCount" style="font-size:.85rem"></span><button class="btn ghost small" id="selAll" type="button">Select all</button><button class="btn ghost small" id="deselAll" type="button">Deselect all</button><button class="btn ghost small" id="copyCsv">Copy log as CSV</button><button class="btn ghost small" id="clearAll">Clear log</button></div>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Plot</th><th>Body</th><th>Date</th><th>Rise</th><th>Highest point</th><th>Set</th><th>Source</th><th></th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table></div>
+    <textarea id="csvOut" hidden readonly style="margin-top:10px"></textarea>
+    <p class="note" id="tzNote"></p>
+    <div class="trends" id="trends"></div>
+    <div class="sources" id="sources">
+      <h3>Data sources</h3>
+      <p class="note">Computed Sun and Moon values are calculated in your browser with the algorithms in Jean Meeus, <cite>Astronomical Algorithms</cite>, 2nd ed. (Richmond, VA: Willmann-Bell, 1998), the standard reference text for positional astronomy calculations. The Sun uses chapter 25 (the method also used by the NOAA Solar Calculator). The Moon uses chapter 47, which is based on the ELP-2000/82 lunar theory of M. Chapront-Touzé and J. Chapront (Bureau des Longitudes, Paris); only its largest periodic terms are included. Sidereal time follows chapter 12, and rising, setting and transit follow chapter 15. Against Meeus’s worked Example 47.a, the computed Moon declination agrees within 0.01°.</p>
+      <p class="note">Conventions: Sun altitude is the center at meridian passage; Sun rise and set are when the upper limb touches a sea horizon (−0°50′). Moon altitude is topocentric (as seen from your location, after parallax, before refraction); Moon rise and set use h₀ = 0.7275 × HP − 0°34′. Expect about ±0.05° in altitude and azimuth and ±2 minutes in time. Star declinations in the catalog are approximate.</p>
+      <p class="note">Header image: the Flammarion engraving, from Camille Flammarion, <cite>L’atmosphère: météorologie populaire</cite> (Paris, 1888), public domain. The colored version is commonly credited to Hugo Heikenwaelder (1998, CC BY-SA).</p>
+      <p class="note">City coordinates and time zones come from the GeoNames geographical database (geonames.org, CC BY 4.0), covering cities of 100,000 people or more and U.S. cities of 50,000 or more.</p>
+      <p class="note">Excel and Google Sheets files are read in your browser with the open-source SheetJS library (Apache 2.0).</p>
+      <p class="note">The authoritative values for navigation are in <cite>The Nautical Almanac</cite>, prepared jointly by HM Nautical Almanac Office (UK) and the U.S. Naval Observatory from high-precision JPL ephemerides; commercial editions reprint the same data. Use your almanac for sight reduction.</p>
+    </div>
+  </section>
+</div>
+</div><!-- /pageDome -->
+<div id="pagePredict" class="pagepanel" role="tabpanel" aria-labelledby="tabPredict" hidden>
+  <section class="card pred-card" aria-label="Make a prediction">
+    <h2>Make prediction</h2>
+    <div class="seg" role="group" aria-label="What to predict" style="margin-bottom:10px">
+      <button type="button" id="pmSun" aria-pressed="true"><i class="dot" style="background:#d9940a"></i>Sun</button><button type="button" id="pmMoon" aria-pressed="false"><i class="dot" style="background:#3c8fc0"></i>Moon and tides</button>
+    </div>
+    <p class="hint" id="pIntro" style="margin-top:0;color:var(--ink)"></p>
+    <div class="pbar">
+      <span id="pLoc" class="locline" style="margin:0"></span>
+      <button type="button" class="btn ghost small" id="pChangeLoc">Change location</button>
+      <span id="pDateBox" style="display:contents"><label class="inline">Date <input type="date" id="pDate"></label>
+      <button type="button" class="btn ghost small" id="pRandom">Random date</button></span>
+    </div>
+    <div id="pScenario" class="pscenario" hidden></div>
+    <div class="dome-box"><div class="svg-wrap" id="pWrap"><svg id="pdome" viewBox="0 0 640 420" role="img" aria-label="Sky globe with a person at the center. Click to place your pin."></svg></div></div>
+    <p class="hint" id="pHover" aria-hidden="true" style="min-height:1.4em;margin:4px 0"></p>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Which side of the dome faces you">
+        <button type="button" data-pphi="0">Face N</button><button type="button" data-pphi="90">Face E</button><button type="button" data-pphi="180">Face S</button><button type="button" data-pphi="270">Face W</button>
+      </div>
+      <label class="inline">Tilt <input type="range" id="pTilt" min="5" max="70" style="width:140px"></label>
+      <label class="inline"><input type="checkbox" id="pHint" style="width:auto"> Hint: show the north–south line</label>
+    </div>
+    <p class="hint" id="pStatus" style="color:var(--ink);font-size:1rem" aria-live="polite"></p>
+    <div class="pbar">
+      <label class="inline">Azimuth <input id="pAz" inputmode="decimal" placeholder="0–360" style="width:6.5em"></label>
+      <label class="inline">Altitude <input id="pAlt" inputmode="decimal" placeholder="0–90" style="width:6.5em"></label>
+      <button type="button" class="btn ghost" id="pBelow" hidden>The Moon is under my feet</button>
+      <button type="button" class="btn" id="pCheck" disabled>Check my prediction</button>
+      <button type="button" class="btn" id="pAgain" hidden>Try again</button>
+    </div>
+    <div id="pResult" aria-live="polite"></div>
+    <div class="pbar" id="pPrintBar" hidden>
+      <button type="button" class="btn" id="pPrint">Print prediction</button>
+      <button type="button" class="btn ghost" id="pSaveImg">Save as image</button>
+      <span class="muted" style="font-size:.85rem">A labelled one-page report with the figure, key, numbers and explanation.</span>
+    </div>
+  </section>
+  <section class="card phist" style="margin-top:16px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap"><h2>Your guesses</h2><button type="button" class="btn ghost small" id="pClear">Clear history</button></div>
+    <div id="pHist"></div>
+  </section>
+</div>
+</div>
+<div id="reportOverlay" class="rpOverlay" role="dialog" aria-modal="true" aria-label="Prediction report" hidden>
+  <div class="rpBar"><button type="button" class="btn" id="rpPrint">Print</button><button type="button" class="btn ghost" id="rpSave">Save image</button><button type="button" class="btn ghost" id="rpClose">Close</button></div>
+  <p class="hint" id="rpMsg" style="margin:8px 0;color:var(--ink)"></p>
+  <div class="rpBody"><img id="rpImg" alt="Prediction report" hidden><div id="rpSvg"></div></div>
+</div>
+<div id="printSheet" aria-hidden="true"></div>
+<div id="toast" role="status"><span id="toastMsg"></span><button id="undoBtn">Undo</button></div>
+
+<script src="cities.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
