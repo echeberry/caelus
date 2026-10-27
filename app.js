@@ -16,8 +16,8 @@ const starDec=name=>{const s=STARS.find(x=>x[0].toLowerCase()===String(name).tri
 const PALETTE=["#5f7f3e","#8a5cc4","#c2452d","#6b7f2a","#b5487f","#d0632a"];
 function colorFor(body){
   const b=String(body).trim().toLowerCase();
-  if(b==="sun")return "#d9940a";
-  if(b==="moon")return "#3c8fc0";
+  if(b==="sun")return "var(--sun)";
+  if(b==="moon")return "var(--moon)";
   let h=0;for(const ch of b)h=(h*31+ch.charCodeAt(0))>>>0;
   return PALETTE[h%PALETTE.length];
 }
@@ -414,7 +414,7 @@ function renderDome(){
   let selMsg="";
   for(const o of [...vis].sort((a,b)=>(a.id===sel)-(b.id===sel))){
     const isSel=sel===o.id, dim=sel&&!isSel, col=dim?"var(--muted)":colorFor(o.body);
-    const w=isSel?3.2:(many?1:1.6), op=dim?0.35:(many?0.75:1);
+    const w=isSel?3.2:(many?1.4:2), op=dim?0.35:(many?0.95:1);
     let g=`<g data-id="${o.id}" opacity="${op}" style="cursor:pointer">`;
     const culmAz=o.culm==="N"?0:180;
     const pR=num(o.riseAz)?PA(0,o.riseAz):null, pS=num(o.setAz)?PA(0,o.setAz):null, pC=num(o.maxAlt)?PA(o.maxAlt,culmAz):null;
@@ -978,7 +978,7 @@ async function exportDome(){
   g.textAlign="right";let x=W-16;
   for(const [,n] of bodies().reverse()){
     g.fillStyle=ink;g.fillText(n,x,58);const w=g.measureText(n).width;
-    g.fillStyle=colorFor(n);g.beginPath();g.arc(x-w-8,54,4.5,0,7);g.fill();x-=w+26;
+    g.fillStyle=colorFor(n).replace(/var\((--[\w-]+)\)/,(m,v)=>getComputedStyle(document.documentElement).getPropertyValue(v).trim()||"#888");g.beginPath();g.arc(x-w-8,54,4.5,0,7);g.fill();x-=w+26;
   }
   g.drawImage(img,0,head,W,H);
   try{c.toBlob(b=>{if(b)offerFile(`caelus-dome-${todayISO()}.png`,b);else toast("The image couldn’t be made in this browser.");},"image/png");}

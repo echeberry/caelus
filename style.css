@@ -1,6 +1,6 @@
 :root{
   --bg:#efe7d3; --card:#fbf7ec; --ink:#1b2557; --muted:#5d6284; --line:#cfc3a3; --soft:#f4eedf; --sky:#e3edf1;
-  --accent:#2e3f93; --accent-ink:#fbf7ec; --sel:#e2e6f4; --dome:#1b2557; --ref:#2e3f93; --obsbg:#e4ecd6; --obsink:#46602b; --calcbg:#dde7f0; --calcink:#2e4a73; --robe:#c0472f;
+  --accent:#2e3f93; --accent-ink:#fbf7ec; --sel:#e2e6f4; --dome:#1b2557; --ref:#2e3f93; --obsbg:#e4ecd6; --obsink:#46602b; --calcbg:#dde7f0; --calcink:#2e4a73; --robe:#c0472f; --sun:#c2410c; --moon:#0b7285;
   --sans:"EB Garamond",Garamond,"Iowan Old Style",Georgia,serif;
   --cond:"EB Garamond",Garamond,"Iowan Old Style",Georgia,serif;
   --display:"IM Fell English","EB Garamond",Garamond,Georgia,serif;
@@ -10,13 +10,13 @@
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --bg:#0d1230; --card:#151c45; --ink:#f2ead6; --muted:#a9aecb; --line:#2c3672; --soft:#1a2252; --sky:#1b2559;
-    --accent:#b7d2dd; --accent-ink:#0d1230; --sel:#26306a; --dome:#e9e1cb; --ref:#b7d2dd; --obsbg:#24361f; --obsink:#b9d79a; --calcbg:#1f2c55; --calcink:#b7d2dd; --robe:#e0775c;
+    --accent:#b7d2dd; --accent-ink:#0d1230; --sel:#26306a; --dome:#e9e1cb; --ref:#b7d2dd; --obsbg:#24361f; --obsink:#b9d79a; --calcbg:#1f2c55; --calcink:#b7d2dd; --robe:#e0775c; --sun:#ffb020; --moon:#5fd3f0;
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
   --bg:#0d1230; --card:#151c45; --ink:#f2ead6; --muted:#a9aecb; --line:#2c3672; --soft:#1a2252; --sky:#1b2559;
-    --accent:#b7d2dd; --accent-ink:#0d1230; --sel:#26306a; --dome:#e9e1cb; --ref:#b7d2dd; --obsbg:#24361f; --obsink:#b9d79a; --calcbg:#1f2c55; --calcink:#b7d2dd; --robe:#e0775c;
+    --accent:#b7d2dd; --accent-ink:#0d1230; --sel:#26306a; --dome:#e9e1cb; --ref:#b7d2dd; --obsbg:#24361f; --obsink:#b9d79a; --calcbg:#1f2c55; --calcink:#b7d2dd; --robe:#e0775c; --sun:#ffb020; --moon:#5fd3f0;
   color-scheme:dark;
 }
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);}
@@ -156,3 +156,6 @@ tbody tr{cursor:pointer}
 svg text{font-family:var(--cond);paint-order:stroke;stroke:var(--card);stroke-width:3px;stroke-linejoin:round}
 @media(max-width:520px){.locline{text-align:left}.grid3{grid-template-columns:1fr 1fr}.grid3>:first-child{grid-column:1/-1}}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
+
+/* dates and their labels on the dome: halo so they stay readable over lines */
+#dome text{paint-order:stroke;stroke:var(--card);stroke-width:3px;stroke-linejoin:round}
